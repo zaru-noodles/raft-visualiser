@@ -25,6 +25,8 @@ func NewNode() Node {
 	return node
 }
 
+// init each element in nextIndex to last log index + 1
+// init each element in matchIndex to 0
 func (n Node) initLeaderStates() {
 	for i := 0; i < 5; i++ {
 		if len(n.log) == 0 {

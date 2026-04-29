@@ -1,16 +1,16 @@
 package raft
 
-// implemented in rpc/transport
 type Transport interface {
-	SendRequestVote(peer string, req RequestVote) (RequestVoteReply, error)
-    SendAppendEntries(peer string, req AppendEntries) (AppendEntriesReply, error)
+	SendRequestVote(peer uint8, req RequestVote) (RequestVoteReply, error)
+    SendAppendEntries(peer uint8, req AppendEntries) (AppendEntriesReply, error)
     Recv() <-chan Message
 }
 
 type Message struct {
     Type    MessageType
     From    string
-    Payload interface{} // allows any type
+    Payload any
+	Reply   chan any
 }
 
 type MessageType int

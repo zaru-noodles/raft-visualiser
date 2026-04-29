@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-    ID      int   
+    ID      uint8   
     Peers   []string // addresses of other nodes, e.g. ["node-1:9000", "node-2:9000"]
     RPCPort string   // port for inter-node RPCs
     WSPort  string   // port for WebSocket dashboard connection
@@ -23,7 +23,7 @@ func Load() Config {
 	}
 
     return Config{
-        ID:      id,
+        ID:      uint8(id),
         Peers:   strings.Split(getEnv("PEERS", ""), ","),
         RPCPort: getEnv("RPC_PORT", "9000"),
         WSPort:  getEnv("WS_PORT", "8080"),

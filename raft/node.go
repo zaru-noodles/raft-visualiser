@@ -4,7 +4,7 @@ type stateFn func() stateFn
 
 type Node struct {
 	// PERSISTANT STATES
-	id uint8          // unique identifier for each node from 0 to 4
+	id uint8          // unique identifier for each node from 1 to 5
 	currentTerm uint64 // lastest term a server has seen
 	votedFor int8    // id of candidate that recieved vote in current term, -1 if none
 	log []Entry     // log entries

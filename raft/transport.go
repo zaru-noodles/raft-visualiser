@@ -1,7 +1,8 @@
 package raft
 
+// implemented in rpc/transport
 type Transport interface {
-	SendRequestVote(peer string, req RequestVote) (VoteReply, error)
+	SendRequestVote(peer string, req RequestVote) (RequestVoteReply, error)
     SendAppendEntries(peer string, req AppendEntries) (AppendEntriesReply, error)
     Recv() <-chan Message
 }
@@ -42,7 +43,7 @@ type RequestVote struct {
     LastLogTerm  uint64
 }
 
-type VoteReply struct {
+type RequestVoteReply struct {
     Term    uint64
     Granted bool
 }

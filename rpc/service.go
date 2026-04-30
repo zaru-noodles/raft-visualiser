@@ -15,7 +15,6 @@ func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVote
 	log.Print("Recieved RequestVote RPC!")
 
     msg := raft.Message{
-        Type:    raft.MsgRequestVote,
         Payload: args,
         Reply:   make(chan any, 1),
     }
@@ -30,7 +29,6 @@ func (s *RaftService) AppendEntries(args raft.AppendEntries, reply *raft.AppendE
 	log.Print("Recieved AppendEntries RPC!")
 
     msg := raft.Message{
-        Type:    raft.MsgAppendEntries,
         Payload: args,
         Reply:   make(chan any, 1),
     }

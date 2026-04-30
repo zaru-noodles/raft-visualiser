@@ -50,3 +50,12 @@ func (n *Node) Run() {
         state = state()
     }
 }
+
+func (n *Node) setTermIfGreater(newTerm uint64) {
+	if newTerm <= n.currentTerm {
+		return
+	}
+
+	n.currentTerm = newTerm
+	n.votedFor = -1
+}

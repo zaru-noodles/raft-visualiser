@@ -7,20 +7,9 @@ type Transport interface {
 }
 
 type Message struct {
-    Type    MessageType
-    From    string
     Payload any
 	Reply   chan any
 }
-
-type MessageType int
-
-const (
-    MsgAppendEntries  MessageType = iota
-    MsgAppendEntriesReply
-    MsgRequestVote
-    MsgVoteReply
-)
 
 type AppendEntries struct {
     Term         uint64

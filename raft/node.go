@@ -39,3 +39,14 @@ func (n Node) initLeaderStates() {
 		n.matchIndex[i] = 0
 	}
 }
+
+func (n *Node) Run() {
+	// start as follower
+    state := n.follower
+
+	// when a node transitions state, 
+	// state() will return a stateFn of the next state, which will be called in the next iteration
+    for state != nil {
+        state = state()
+    }
+}

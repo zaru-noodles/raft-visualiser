@@ -16,7 +16,7 @@ func (n *Node) candidate() stateFn {
 		}
 
 		go func() {
-			reply, err := n.Transport.SendRequestVote(i, req)
+			reply, err := n.transport.SendRequestVote(i, req)
 			if err == nil {
 				replies <- reply
 			}
@@ -48,7 +48,7 @@ func (n *Node) candidate() stateFn {
 			}
 
 		// handle any incoming RPCs
-		case msg := <- n.Transport.Recv():
+		case msg := <- n.transport.Recv():
 			switch payload := msg.Payload.(type) {
 			// convert back to follower if received AppendEntries from new leader
 			case AppendEntries:

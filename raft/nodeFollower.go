@@ -17,7 +17,7 @@ func (n *Node) follower() stateFn {
 			return n.candidate
 
 		// handle any incoming RPCs
-		case msg := <- n.Transport.Recv():
+		case msg := <- n.transport.Recv():
 			switch payload := msg.Payload.(type) {
 			case AppendEntries:
 				// reset timeout

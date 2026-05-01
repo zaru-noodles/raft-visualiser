@@ -17,12 +17,12 @@ type Node struct {
 	nextIndex  [5]uint64
 	matchIndex [5]uint64
 
-	Transport Transport // supports RPC connection between peers
+	transport Transport               // supports RPC connection between peers
+	clientTransport ClientTransport   // support client requests
 }
 
-func MakeNode(id uint8, t Transport) Node {
-	node := Node{id: id, Transport: t, votedFor: -1}
-	node.initLeaderStates()
+func MakeNode(id uint8, t Transport, ct ClientTransport) Node {
+	node := Node{id: id, transport: t, votedFor: -1, clientTransport: ct}
 	return node
 }
 

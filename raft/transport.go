@@ -1,5 +1,6 @@
 package raft
 
+// RPC CLASSES
 type Transport interface {
 	SendRequestVote(peer uint8, req RequestVote) (RequestVoteReply, error)
     SendAppendEntries(peer uint8, req AppendEntries) (AppendEntriesReply, error)
@@ -35,4 +36,14 @@ type RequestVote struct {
 type RequestVoteReply struct {
     Term    uint64
     Granted bool
+}
+
+// API CLIENT REQUESTS
+type ClientTransport interface {
+    Recv() <-chan ClientRequest
+}
+
+type ClientRequest struct {
+	Key   int    `json:"key"`
+	Value string `json:"val"`
 }

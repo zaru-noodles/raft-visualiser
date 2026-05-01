@@ -18,7 +18,7 @@ func (n *Node) leader() stateFn {
 		case <- heartbeat.C:
 			n.sendHeartbeats(appendReplies)
 
-		case msg := <-n.Transport.Recv():
+		case msg := <- n.transport.Recv():
             switch payload := msg.Payload.(type) {
             case AppendEntries:
                 if payload.Term > n.currentTerm {
@@ -54,7 +54,7 @@ func (n *Node) sendHeartbeats(appendReplies chan AppendEntriesReply) {
 		}
 
 		go func() {
-			reply, err := n.Transport.SendAppendEntries(i, req)
+			reply, err := n.transport.SendAppendEntries(i, req)
 			if err == nil {
 				appendReplies <- reply
 			}

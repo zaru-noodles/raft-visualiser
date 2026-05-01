@@ -5,5 +5,5 @@ type Entry struct {
 	Index uint64
 	Op string
 	Key int
-	Value int
+	Value string
 }

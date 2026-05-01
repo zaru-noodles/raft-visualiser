@@ -1,8 +1,6 @@
 package rpc
 
 import (
-	"log"
-	
 	"github.com/zaru-noodles/raft-visualiser/raft"
 )
 
@@ -12,8 +10,6 @@ type RaftService struct {
 
 // adds a RequestVote message to the inbox channel
 func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVoteReply) error {
-	log.Print("Recieved RequestVote RPC!")
-
     msg := raft.Message{
         Payload: args,
         Reply:   make(chan any, 1),
@@ -26,8 +22,6 @@ func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVote
 
 // adds a AppendEntries message to the inbox channel
 func (s *RaftService) AppendEntries(args raft.AppendEntries, reply *raft.AppendEntriesReply) error {
-	log.Print("Recieved AppendEntries RPC!")
-
     msg := raft.Message{
         Payload: args,
         Reply:   make(chan any, 1),

@@ -7,13 +7,13 @@ import (
 )
 
 func (n *Node) follower() stateFn {
+	log.Printf("Transitioned to FOLLOWER (Term %v)", n.currentTerm)
 	timeout := randomElectionTimeout()
 
 	for {
 		select {
 		// transit to candidate if heartbeat is missing 
 		case <- timeout:
-			log.Printf("Transitioned to CANDIDATE")
 			return n.candidate
 
 		// handle any incoming RPCs
@@ -25,13 +25,15 @@ func (n *Node) follower() stateFn {
 				n.setTermIfGreater(payload.Term)
 
 				// TODO: append entries
+				msg.Reply <- AppendEntriesReply{Term: n.currentTerm, Success: true}
 
 			case RequestVote:
 				n.setTermIfGreater(payload.Term)
-				reply := handleRequestVote(n, payload)
-
+				reply := n.handleRequestVote(payload)
+				
 				// if vote is granted, reset election timer
 				if reply.Granted {
+					log.Printf("Voted for node %v (Term %v)", payload.CandidateID, n.currentTerm)
 					timeout = randomElectionTimeout()
 				}
 
@@ -42,17 +44,6 @@ func (n *Node) follower() stateFn {
 }
 
 func randomElectionTimeout() <-chan time.Time {
-	d := time.Duration(150 + rand.IntN(150)) * time.Millisecond
+	d := time.Duration(250 + rand.IntN(100)) * time.Millisecond
 	return time.After(d)
-}
-
-func handleRequestVote(n *Node, req RequestVote) RequestVoteReply {
-	rejectReply := RequestVoteReply{Term: n.currentTerm, Granted: false}
-	// if already voted for someone, reject the request
-	if n.votedFor == -1 {
-		return rejectReply
-	}
-
-	n.votedFor = int8(req.CandidateID)
-    return RequestVoteReply{Term: n.currentTerm, Granted: true}
 }

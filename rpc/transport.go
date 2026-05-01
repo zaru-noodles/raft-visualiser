@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/zaru-noodles/raft-visualiser/raft"
 )
@@ -42,8 +43,8 @@ func (t TransportRPC) SendRequestVote(peer uint8, req raft.RequestVote) (raft.Re
 
     err := client.Call("RaftService.RequestVote", req, &reply)
 	if err != nil {
-		go client.Close()
-
+		log.Printf("Lost connection to node %v", peer)
+		t.peers[peer].Reset()
 	}
 
     return reply, err
@@ -60,8 +61,8 @@ func (t TransportRPC) SendAppendEntries(peer uint8, req raft.AppendEntries) (raf
 
     err := client.Call("RaftService.AppendEntries", req, &reply)
 	if err != nil {
-		go client.Close()
-		
+		log.Printf("Lost connection to node %v", peer)
+		t.peers[peer].Reset()
 	}
     return reply, err
 }

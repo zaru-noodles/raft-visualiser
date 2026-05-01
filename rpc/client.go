@@ -1,7 +1,9 @@
 package rpc
 
 import (
+	"net"
 	"net/rpc"
+	"time"
 	"sync"
 )
 
@@ -46,24 +48,25 @@ func (p *PeerClient) GetClient() *rpc.Client{
 	p.ready = make(chan any)
 	p.mu.Unlock()
 	
-	client, err := rpc.Dial("tcp", p.addr)
+	c, err := net.DialTimeout("tcp", p.addr, 225*time.Millisecond)
 	
 	p.mu.Lock()
 	if err == nil {
-		p.client = client
+		p.client =  rpc.NewClient(c)
 	}
 	p.dialing = false
 	close(p.ready)
+	tmp := p.client
 	p.mu.Unlock()
 
-	return p.client
+	return tmp
 }
 
 // resets the PeerClient to nil
 func (p *PeerClient) Reset() {
     p.mu.Lock()
     if p.client != nil {
-        p.client.Close()
+        go p.client.Close()
     }
     p.client = nil
     p.mu.Unlock()

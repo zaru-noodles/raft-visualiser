@@ -59,3 +59,39 @@ func (n *Node) setTermIfGreater(newTerm uint64) {
 	n.currentTerm = newTerm
 	n.votedFor = -1
 }
+
+func (n *Node) handleRequestVote(req RequestVote) RequestVoteReply {
+	rejectReply := RequestVoteReply{Term: n.currentTerm, Granted: false}
+
+	// reject if candidate's term is behind
+    if req.Term < n.currentTerm {
+        return rejectReply
+    }
+	
+    // reject if already voted for someone else this term
+    if n.votedFor != -1 {
+        return rejectReply
+    }
+
+	// reject if candidate's log is less up-to-date
+    lastIndex, lastTerm := n.getLastLogData()
+    if req.LastLogTerm < lastTerm {
+        return rejectReply
+    }
+    if req.LastLogTerm == lastTerm && req.LastLogIndex < lastIndex {
+        return rejectReply
+    }
+
+
+	n.votedFor = int8(req.CandidateID)
+    return RequestVoteReply{Term: n.currentTerm, Granted: true}
+}
+
+// returns lastest log's index and term
+func (n *Node) getLastLogData() (uint64, uint64) {
+	if len(n.log) == 0 {
+		return 0, 0
+	} 
+	l := n.log[len(n.log)-1]
+	return l.Index, l.Term
+}

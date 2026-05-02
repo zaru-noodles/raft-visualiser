@@ -3,8 +3,10 @@ package raft
 import "log"
 
 func (n *Node) candidate() stateFn {
+	log.Printf("Transitioned to CANDIDATE (Term %v)", n.currentTerm + 1)
+	n.state = Candidate
 	n.currentTerm++
-	log.Printf("Transitioned to CANDIDATE (Term %v)", n.currentTerm)
+	n.leaderID = -1
 
 	// send RequestVote RPCs to peers
 	index, term := n.getLastLogData()
@@ -54,6 +56,7 @@ func (n *Node) candidate() stateFn {
 			case AppendEntries:
 				if payload.Term >= n.currentTerm {
 					n.setTermIfGreater(payload.Term)
+					n.leaderID = int8(payload.LeaderID)
 					msg.Reply <- AppendEntriesReply{Term: n.currentTerm, Success: false}
 					return n.follower
 				}
@@ -68,6 +71,10 @@ func (n *Node) candidate() stateFn {
 				}
 				msg.Reply <- n.handleRequestVote(payload)
 			}
+
+		// handle incoming client requests
+		case req := <- n.clientTransport.Recv():
+			n.handleClientRequest(&req) 
 		}
 	}
 }

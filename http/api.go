@@ -13,19 +13,24 @@ type HTTPServer struct {
 }
 
 func MakeHTTPServer(port string) *HTTPServer {
-	return &HTTPServer{Inbox: make(chan raft.ClientRequest, 4), port: port}
+	tmp := &HTTPServer{Inbox: make(chan raft.ClientRequest, 4), port: port}
+	go tmp.StartServer()
+	return tmp
 }
 
 func (s *HTTPServer) StartServer() {
 	// listen for POST requests on /submit
 	http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
-        var cmd raft.ClientRequest
-        if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
+        var req raft.ClientRequest
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
             http.Error(w, "bad request", 400)
             return
         }
-        s.Inbox <- cmd
-        w.WriteHeader(200)
+
+		req.Response = w
+		req.Done = make(chan bool, 0)
+        s.Inbox <- req
+		<- req.Done
     })
 
     http.ListenAndServe(":" + s.port, nil)

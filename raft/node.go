@@ -2,6 +2,14 @@ package raft
 
 type stateFn func() stateFn
 
+type NodeState int
+
+const (
+    Follower NodeState = iota
+    Candidate
+    Leader
+)
+
 type Node struct {
 	// PERSISTANT STATES
 	id          uint8   // unique identifier for each node from 0 to 4
@@ -10,38 +18,34 @@ type Node struct {
 	log         []Entry // log entries
 
 	// VOLATILE STATES
+	state       NodeState
 	commitIndex uint64 // index of lastest log entry known to be commited
 	lastApplied uint64 // index of lastest log applied to the state machine
+	leaderID    int8   // ID of current leader, -1 if none
 
 	// VOLATILE LEADER STATES
-	nextIndex  [5]uint64
-	matchIndex [5]uint64
+	nextIndex        [5]uint64
+	matchIndex       [5]uint64
+	pendingCommits   map[uint64]chan bool
 
 	transport Transport               // supports RPC connection between peers
 	clientTransport ClientTransport   // support client requests
 }
 
 func MakeNode(id uint8, t Transport, ct ClientTransport) Node {
-	node := Node{id: id, transport: t, votedFor: -1, clientTransport: ct}
-	return node
-}
-
-// init each element in nextIndex to last log index + 1
-// init each element in matchIndex to 0
-func (n Node) initLeaderStates() {
-	for i := 0; i < 5; i++ {
-		if len(n.log) == 0 {
-			n.nextIndex[i] = 1
-		} else {
-			n.nextIndex[i] = n.log[len(n.log)-1].Index + 1
-		}
-
-		n.matchIndex[i] = 0
+	node := Node{
+		id: id, 
+		transport: t, 
+		votedFor: -1, 
+		leaderID: -1,
+		clientTransport: ct,
 	}
+	return node
 }
 
 func (n *Node) Run() {
 	// start as follower
+	n.state = Follower
     state := n.follower
 
 	// when a node transitions state, 
@@ -58,6 +62,7 @@ func (n *Node) setTermIfGreater(newTerm uint64) {
 
 	n.currentTerm = newTerm
 	n.votedFor = -1
+	n.leaderID = -1
 }
 
 func (n *Node) handleRequestVote(req RequestVote) RequestVoteReply {

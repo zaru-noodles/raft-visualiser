@@ -1,5 +1,7 @@
 package raft
 
+import "net/http"
+
 // RPC CLASSES
 type Transport interface {
 	SendRequestVote(peer uint8, req RequestVote) (RequestVoteReply, error)
@@ -26,6 +28,12 @@ type AppendEntriesReply struct {
     Success bool
 }
 
+type AppendReplyWrapper struct {
+	PeerID        uint8
+	EntriesCount  uint64
+	Reply         AppendEntriesReply
+}
+
 type RequestVote struct {
     Term         uint64
     CandidateID  uint8
@@ -44,6 +52,8 @@ type ClientTransport interface {
 }
 
 type ClientRequest struct {
-	Key   int    `json:"key"`
-	Value string `json:"val"`
+	Key       int    `json:"key"`
+	Value     string `json:"val"`
+	Response  http.ResponseWriter
+	Done      chan bool
 }

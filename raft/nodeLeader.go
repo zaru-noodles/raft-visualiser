@@ -129,8 +129,7 @@ func (n *Node) leaderAdvanceCommitIndex() {
             }
         }
         if count >= 3 {
-            n.commitIndex = idx
-			log.Printf("Commited up to index %v", n.commitIndex)
+            n.commitNext()
 			n.pendingCommits[idx] <- true
         }
     }

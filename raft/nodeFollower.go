@@ -43,7 +43,7 @@ func (n *Node) follower() stateFn {
 
 				// append to log if valid
 				for _, e := range payload.Entries {
-					log.Printf("Added (%v: %v) to log", e.Key, e.Value)
+					log.Printf("Added {%v: %v} to log (Index: %v, Value: %v)", e.Key, e.Value, e.Index, e.Term)
 					if int(e.Index) > len(n.log) {
 						n.log = append(n.log, e)
 					} else if n.log[e.Index-1].Term != e.Term {
@@ -53,10 +53,8 @@ func (n *Node) follower() stateFn {
 				}
 
 				// update commit index
-				if payload.LeaderCommit > n.commitIndex {
-					n.commitIndex = min(payload.LeaderCommit, uint64(len(n.log)))
-					log.Printf("Commited up to index %v", n.commitIndex)
-					// TODO commit to state machine
+				for n.commitIndex < min(payload.LeaderCommit, uint64(len(n.log))) {
+					n.commitNext()
 				}
 				msg.Reply <- AppendEntriesReply{Term: n.currentTerm, Success: true}
 

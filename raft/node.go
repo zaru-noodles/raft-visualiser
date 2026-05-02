@@ -1,5 +1,7 @@
 package raft
 
+import "log"
+
 type stateFn func() stateFn
 
 type NodeState int
@@ -18,10 +20,11 @@ type Node struct {
 	log         []Entry // log entries
 
 	// VOLATILE STATES
-	state       NodeState
-	commitIndex uint64 // index of lastest log entry known to be commited
-	lastApplied uint64 // index of lastest log applied to the state machine
-	leaderID    int8   // ID of current leader, -1 if none
+	state        NodeState       
+	storage      map[int]string  // KV store
+	commitIndex  uint64          // index of lastest log entry known to be commited
+	lastApplied  uint64          // index of lastest log applied to the state machine
+	leaderID     int8            // ID of current leader, -1 if none
 
 	// VOLATILE LEADER STATES
 	nextIndex        [5]uint64
@@ -38,6 +41,7 @@ func MakeNode(id uint8, t Transport, ct ClientTransport) Node {
 		transport: t, 
 		votedFor: -1, 
 		leaderID: -1,
+		storage: map[int]string{},
 		clientTransport: ct,
 	}
 	return node
@@ -99,4 +103,13 @@ func (n *Node) getLastLogData() (uint64, uint64) {
 	} 
 	l := n.log[len(n.log)-1]
 	return l.Index, l.Term
+}
+
+// commits entry with Index == commitIndex+1 to the KV storage
+// increments commitIndex
+func (n *Node) commitNext() {
+	entry := n.log[n.commitIndex]
+	log.Printf("Commited entry: {%v: %v} (Index: %v, Term: %v)", entry.Key, entry.Value, entry.Index, entry.Term)
+	n.storage[entry.Key] = entry.Value
+	n.commitIndex++
 }

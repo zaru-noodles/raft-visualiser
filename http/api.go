@@ -28,7 +28,7 @@ func (s *HTTPServer) StartServer() {
         }
 
 		req.Response = w
-		req.Done = make(chan bool, 0)
+		req.Done = make(chan bool, 1)
         s.Inbox <- req
 		<- req.Done
     })

@@ -21,7 +21,7 @@ type Node struct {
 
 	// VOLATILE STATES
 	state        NodeState       
-	storage      map[int]string  // KV store
+	fsm          map[int]string  // KV store
 	commitIndex  uint64          // index of lastest log entry known to be commited
 	lastApplied  uint64          // index of lastest log applied to the state machine
 	leaderID     int8            // ID of current leader, -1 if none
@@ -41,7 +41,7 @@ func MakeNode(id uint8, t Transport, ct ClientTransport) Node {
 		transport: t, 
 		votedFor: -1, 
 		leaderID: -1,
-		storage: map[int]string{},
+		fsm: map[int]string{},
 		clientTransport: ct,
 	}
 	return node
@@ -110,6 +110,6 @@ func (n *Node) getLastLogData() (uint64, uint64) {
 func (n *Node) commitNext() {
 	entry := n.log[n.commitIndex]
 	log.Printf("Commited entry: {%v: %v} (Index: %v, Term: %v)", entry.Key, entry.Value, entry.Index, entry.Term)
-	n.storage[entry.Key] = entry.Value
+	n.fsm[entry.Key] = entry.Value
 	n.commitIndex++
 }

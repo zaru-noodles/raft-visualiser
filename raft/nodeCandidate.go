@@ -5,7 +5,7 @@ import "log"
 func (n *Node) candidate() stateFn {
 	log.Printf("Transitioned to CANDIDATE (Term %v)", n.currentTerm + 1)
 	n.state = Candidate
-	n.currentTerm++
+	n.setCurrentTerm(n.currentTerm + 1)
 	n.leaderID = -1
 
 	// send RequestVote RPCs to peers
@@ -28,7 +28,7 @@ func (n *Node) candidate() stateFn {
 	// count votes, if majority reached before timeout, transit to leader, else retry election
 	timeout := randomElectionTimeout()
 	voteCount := 1
-	n.votedFor = int8(n.id)
+	n.setVotedFor(int8(n.id))
 	for {
 		select {
 		case <-timeout:

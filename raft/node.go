@@ -1,6 +1,9 @@
 package raft
 
-import "log"
+import (
+	"log"
+	"slices"
+)
 
 type stateFn func() stateFn
 
@@ -31,11 +34,12 @@ type Node struct {
 	matchIndex       [5]uint64
 	pendingCommits   map[uint64]chan bool
 
-	transport Transport               // supports RPC connection between peers
-	clientTransport ClientTransport   // support client requests
+	transport       Transport         // supports RPC connection between peers
+	clientTransport ClientTransport   // supports client requests
+	storage         *PersistentStorage
 }
 
-func MakeNode(id uint8, t Transport, ct ClientTransport) Node {
+func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string) *Node {
 	node := Node{
 		id: id, 
 		transport: t, 
@@ -44,7 +48,10 @@ func MakeNode(id uint8, t Transport, ct ClientTransport) Node {
 		fsm: map[int]string{},
 		clientTransport: ct,
 	}
-	return node
+
+	node.storage = makeStorage(&node, dataDir)
+	node.storage.Load()
+	return &node
 }
 
 func (n *Node) Run() {
@@ -57,16 +64,6 @@ func (n *Node) Run() {
     for state != nil {
         state = state()
     }
-}
-
-func (n *Node) setTermIfGreater(newTerm uint64) {
-	if newTerm <= n.currentTerm {
-		return
-	}
-
-	n.currentTerm = newTerm
-	n.votedFor = -1
-	n.leaderID = -1
 }
 
 func (n *Node) handleRequestVote(req RequestVote) RequestVoteReply {
@@ -92,7 +89,7 @@ func (n *Node) handleRequestVote(req RequestVote) RequestVoteReply {
     }
 
 
-	n.votedFor = int8(req.CandidateID)
+	n.setVotedFor(int8(req.CandidateID))
     return RequestVoteReply{Term: n.currentTerm, Granted: true}
 }
 
@@ -112,4 +109,41 @@ func (n *Node) commitNext() {
 	log.Printf("Commited entry: {%v: %v} (Index: %v, Term: %v)", entry.Key, entry.Value, entry.Index, entry.Term)
 	n.fsm[entry.Key] = entry.Value
 	n.commitIndex++
+}
+
+// SETTERS FOR PERSISTANT STATES
+
+func (n *Node) setCurrentTerm(term uint64) {
+    n.currentTerm = term
+    n.storage.Save()
+}
+
+func (n *Node) setVotedFor(id int8) {
+    n.votedFor = id
+    n.storage.Save()
+}
+
+func (n *Node) deleteLogEntry(index uint64) {
+	n.log = slices.Delete(n.log, int(index)-1, len(n.log))
+	n.storage.Save()
+}
+
+func (n *Node) appendLogEntry(entry Entry) {
+    n.log = append(n.log, entry)
+    log.Print(n.storage.Save())
+}
+
+func (n *Node) setTermAndVote(term uint64, votedFor int8) {
+    n.currentTerm = term
+    n.votedFor = votedFor
+    log.Print(n.storage.Save())
+}
+
+func (n *Node) setTermIfGreater(newTerm uint64) {
+	if newTerm <= n.currentTerm {
+		return
+	}
+
+	n.setTermAndVote(newTerm, -1)
+	n.leaderID = -1
 }

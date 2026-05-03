@@ -3,7 +3,6 @@ package raft
 import (
 	"log"
 	"math/rand/v2"
-	"slices"
 	"time"
 )
 
@@ -45,10 +44,10 @@ func (n *Node) follower() stateFn {
 				for _, e := range payload.Entries {
 					log.Printf("Added {%v: %v} to log (Index: %v, Value: %v)", e.Key, e.Value, e.Index, e.Term)
 					if int(e.Index) > len(n.log) {
-						n.log = append(n.log, e)
+						n.appendLogEntry(e)
 					} else if n.log[e.Index-1].Term != e.Term {
-						n.log = slices.Delete(n.log, int(e.Index)-1, len(n.log))
-						n.log = append(n.log, e)
+						n.deleteLogEntry(e.Index)
+						n.appendLogEntry(e)
 					} 
 				}
 

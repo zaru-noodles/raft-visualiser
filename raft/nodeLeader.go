@@ -52,7 +52,9 @@ func (n *Node) leader() stateFn {
 				n.matchIndex[r.PeerID] = n.nextIndex[r.PeerID] - 1 + r.EntriesCount
 				n.nextIndex[r.PeerID] = n.matchIndex[r.PeerID] + 1
 				n.leaderAdvanceCommitIndex()
-			} else {
+
+			// prevent underflow 
+			} else if n.nextIndex[r.PeerID] > 1 {
 				n.nextIndex[r.PeerID]--
 			}
 

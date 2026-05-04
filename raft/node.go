@@ -1,5 +1,7 @@
 package raft
 
+// stateFn is a function type that represents the state of a node in the Raft algorithm.
+
 type stateFn func() stateFn
 
 type Node struct {

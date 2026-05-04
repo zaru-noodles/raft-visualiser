@@ -1,11 +1,25 @@
 services:
+  node-0:
+    build: .
+    environment:
+      - NODE_ID=0
+      - PEERS=node-1:9000,node-2:9000,node-3:9000,node-4:9000
+      - RPC_PORT=9000
+      - WS_PORT=8080
+      - DATA_DIR=/data
+    ports:
+      - "8080:8080"
+    volumes:
+      - node0-data:/data
+
   node-1:
     build: .
     environment:
-      - NODE_ID=node-1
-      - PEERS=node-2:9000,node-3:9000,node-4:9000,node-5:9000
+      - NODE_ID=1
+      - PEERS=node-0:9000,node-2:9000,node-3:9000,node-4:9000
       - RPC_PORT=9000
       - WS_PORT=8080
+      - DATA_DIR=/data
     ports:
       - "8081:8080"
     volumes:
@@ -14,10 +28,11 @@ services:
   node-2:
     build: .
     environment:
-      - NODE_ID=node-2
-      - PEERS=node-1:9000,node-3:9000,node-4:9000,node-5:9000
+      - NODE_ID=2
+      - PEERS=node-0:9000,node-1:9000,node-3:9000,node-4:9000
       - RPC_PORT=9000
       - WS_PORT=8080
+      - DATA_DIR=/data
     ports:
       - "8082:8080"
     volumes:
@@ -26,10 +41,11 @@ services:
   node-3:
     build: .
     environment:
-      - NODE_ID=node-3
-      - PEERS=node-1:9000,node-2:9000,node-4:9000,node-5:9000
+      - NODE_ID=3
+      - PEERS=node-0:9000,node-1:9000,node-2:9000,node-4:9000
       - RPC_PORT=9000
       - WS_PORT=8080
+      - DATA_DIR=/data
     ports:
       - "8083:8080"
     volumes:
@@ -38,30 +54,19 @@ services:
   node-4:
     build: .
     environment:
-      - NODE_ID=node-4
-      - PEERS=node-1:9000,node-2:9000,node-3:9000,node-5:9000
+      - NODE_ID=4
+      - PEERS=node-0:9000,node-1:9000,node-2:9000,node-3:9000
       - RPC_PORT=9000
       - WS_PORT=8080
+      - DATA_DIR=/data
     ports:
       - "8084:8080"
     volumes:
       - node4-data:/data
 
-  node-5:
-    build: .
-    environment:
-      - NODE_ID=node-5
-      - PEERS=node-1:9000,node-2:9000,node-3:9000,node-4:9000
-      - RPC_PORT=9000
-      - WS_PORT=8080
-    ports:
-      - "8085:8080"
-    volumes:
-      - node5-data:/data
-
 volumes:
+  node0-data:
   node1-data:
   node2-data:
   node3-data:
   node4-data:
-  node5-data:

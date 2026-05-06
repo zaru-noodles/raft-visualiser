@@ -3,7 +3,7 @@ const PORTS = [8080, 8081, 8082, 8083, 8084];
 const NODE_COLORS = ['#e06080', '#60c0e0', '#a0e060', '#c080e0', '#e0a040'];
 
 // Node positions in a circle
-const CX = 280, CY = 280, RADIUS = 200;
+const CX = 380, CY = 380, RADIUS = 280;
 const positions = [];
 for (let i = 0; i < NUM_NODES; i++) {
   const angle = (i / NUM_NODES) * Math.PI * 2 - Math.PI / 2;
@@ -59,7 +59,7 @@ svg.innerHTML = '';
 
 nodes.forEach((node1, i) => {
   nodes.forEach((node2, j) => {
-    if (i == j) return;
+    if (i <= j) return;
 
     const from = positions[i];
     const to = positions[j];
@@ -69,7 +69,7 @@ nodes.forEach((node1, i) => {
     line.setAttribute('y1', from.y);
     line.setAttribute('x2', to.x);
     line.setAttribute('y2', to.y);
-    line.setAttribute('class', 'heartbeat-line active');
+    line.setAttribute('class', 'connection-line');
     svg.appendChild(line);
   });
 });
@@ -102,50 +102,26 @@ function renderEvents() {
     body.innerHTML = '<div class="empty">Waiting for events...</div>';
     return;
   }
-  body.innerHTML = events.slice(0, 80).map(e => `
+
+  const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 30;
+
+  body.innerHTML = '<div class="event-spacer"></div>' + events.slice(0, 80).reverse().map(e => `
     <div class="event">
       <span class="event-time">${e.time}</span>
       <span class="event-node n${e.nodeId}">node-${e.nodeId}</span>
       <span class="event-msg">${e.msg}</span>
     </div>
   `).join('');
+
+  if (atBottom) {
+        body.scrollTop = body.scrollHeight;
+  }
 }
 
 document.getElementById('clear-events').addEventListener('click', () => {
   events.length = 0;
   renderEvents();
 });
-
-// Log
-function renderLog() {
-  const leader = nodes.find(n => n.state === 'leader' && n.connected);
-  const logSource = leader || nodes.find(n => n.connected);
-  const body = document.getElementById('log-body');
-  const count = document.getElementById('log-count');
-
-  if (!logSource || !logSource.log || logSource.log.length === 0) {
-    body.innerHTML = '<div class="empty">No log entries yet</div>';
-    count.textContent = '0 entries';
-    return;
-  }
-
-  const log = logSource.log;
-  const commitIdx = logSource.commitIndex;
-  count.textContent = `${log.length} entries`;
-
-  body.innerHTML = log.map(entry => `
-    <div class="log-entry">
-      <span class="log-idx">#${entry.Index}</span>
-      <span class="log-term">T${entry.Term}</span>
-      <span class="log-cmd">${entry.Key}: ${entry.Value}</span>
-      <span class="log-status ${entry.Index <= commitIdx ? 'committed' : 'uncommitted'}">
-        ${entry.Index <= commitIdx ? 'committed' : 'pending'}
-      </span>
-    </div>
-  `).join('');
-
-  body.scrollTop = body.scrollHeight;
-}
 
 // Cluster info
 function updateClusterInfo() {
@@ -191,12 +167,9 @@ function connectNode(id) {
 
         if (prev.state !== nodes[id].state) {
           addEvent(id, `→ ${nodes[id].state.toUpperCase()} (term ${nodes[id].term})`);
-        } else if (prev.term !== nodes[id].term) {
-          addEvent(id, `Term updated to ${nodes[id].term}`);
         }
 
         updateNodeUI(id);
-        renderLog();
         updateClusterInfo();
       } catch (e) {
         console.error(`Parse error node-${id}:`, e);
@@ -241,6 +214,7 @@ async function submitCommand() {
   }
 
   const port = PORTS[leader.id];
+  console.log(JSON.stringify({ key, val }))
   try {
     const res = await fetch(`http://localhost:${port}/submit`, {
       method: 'POST',
@@ -248,7 +222,7 @@ async function submitCommand() {
       body: JSON.stringify({ key, val })
     });
     if (res.ok) {
-      addEvent(leader.id, `Accepted: ${key} = ${val}`);
+      addEvent(leader.id, `Accepted: {${key}: ${val}}`);
     } else {
       addEvent(leader.id, `Rejected: ${res.status}`);
     }

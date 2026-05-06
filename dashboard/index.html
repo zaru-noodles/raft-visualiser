@@ -19,34 +19,32 @@
     </div>
   </div>
 
-  <div class="cluster-ring" id="cluster-ring">
-    <svg id="connections" viewBox="0 0 560 560"></svg>
-  </div>
+  <div class="main-layout">
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Dashboard</h2>
+        </div>
+        <div class="submit-bar">
+          <input type="number" id="submit-key" placeholder="key" style="flex:0.4">
+          <input type="text" id="submit-val" placeholder="value">
+          <button id="submit-btn">Submit</button>
+        </div>
+      </div>
 
-  <div class="panels">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Log</h2>
-        <span style="font-size:10px;color:var(--text-dim)" id="log-count">0 entries</span>
-      </div>
-      <div class="panel-body" id="log-body">
-        <div class="empty">No log entries yet</div>
-      </div>
-      <div class="submit-bar">
-        <input type="number" id="submit-key" placeholder="key" style="flex:0.4">
-        <input type="text" id="submit-val" placeholder="value">
-        <button id="submit-btn">Submit</button>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Events</h2>
+          <button style="background:none;border:1px solid var(--border);border-radius:3px;padding:3px 8px;color:var(--text-dim);font-family:'JetBrains Mono';font-size:9px;cursor:pointer;letter-spacing:1px" id="clear-events">CLEAR</button>
+        </div>
+        <div class="panel-body bottom-aligned" id="event-body">
+          <div class="empty">Waiting for events...</div>
+        </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Events</h2>
-        <button style="background:none;border:1px solid var(--border);border-radius:3px;padding:3px 8px;color:var(--text-dim);font-family:'JetBrains Mono';font-size:9px;cursor:pointer;letter-spacing:1px" id="clear-events">CLEAR</button>
-      </div>
-      <div class="panel-body" id="event-body">
-        <div class="empty">Waiting for events...</div>
-      </div>
+    <div class="cluster-ring" id="cluster-ring">
+      <svg id="connections" viewBox="0 0 760 760"></svg>
     </div>
   </div>
 </div>

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/zaru-noodles/raft-visualiser/raft"
@@ -10,6 +9,7 @@ import (
 type HTTPServer struct {
 	Inbox chan raft.ClientRequest
 	port  string
+	Node *raft.Node
 }
 
 func MakeHTTPServer(port string) *HTTPServer {
@@ -20,19 +20,8 @@ func MakeHTTPServer(port string) *HTTPServer {
 
 func (s *HTTPServer) StartServer() {
 	// listen for POST requests on /submit
-	http.HandleFunc("/submit", func(w http.ResponseWriter, r *http.Request) {
-        var req raft.ClientRequest
-        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-            http.Error(w, "bad request", 400)
-            return
-        }
-
-		req.Response = w
-		req.Done = make(chan bool, 1)
-        s.Inbox <- req
-		<- req.Done
-    })
-
+	http.HandleFunc("/submit", s.handleClientRequest())
+	http.HandleFunc("/ws", s.handleWebsocket())
     http.ListenAndServe(":" + s.port, nil)
 }
 

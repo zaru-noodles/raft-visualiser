@@ -12,5 +12,6 @@ func main() {
 	transport := rpc.MakeTransport(cfg.RPCPort, cfg.Peers, cfg.ID)
 	clientTransport := api.MakeHTTPServer(cfg.WSPort)
 	node := raft.MakeNode(cfg.ID, transport, clientTransport, cfg.DataDir)
+	clientTransport.Node = node
 	node.Run()
 }

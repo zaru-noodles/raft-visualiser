@@ -64,6 +64,13 @@ services:
     volumes:
       - node4-data:/data
 
+  dashboard:
+    image: nginx:alpine
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+    ports:
+      - "3000:80"
+
 volumes:
   node0-data:
   node1-data:

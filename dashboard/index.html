@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raft Visualiser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>Raft Visualiser</h1>
+    <div class="cluster-info">
+      <span class="status-dot connected" id="cluster-status"></span>
+      <span id="cluster-info-text">5 nodes · connecting...</span>
+    </div>
+  </div>
+
+  <div class="cluster-ring" id="cluster-ring">
+    <svg id="connections" viewBox="0 0 560 560"></svg>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Log</h2>
+        <span style="font-size:10px;color:var(--text-dim)" id="log-count">0 entries</span>
+      </div>
+      <div class="panel-body" id="log-body">
+        <div class="empty">No log entries yet</div>
+      </div>
+      <div class="submit-bar">
+        <input type="number" id="submit-key" placeholder="key" style="flex:0.4">
+        <input type="text" id="submit-val" placeholder="value">
+        <button id="submit-btn">Submit</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Events</h2>
+        <button style="background:none;border:1px solid var(--border);border-radius:3px;padding:3px 8px;color:var(--text-dim);font-family:'JetBrains Mono';font-size:9px;cursor:pointer;letter-spacing:1px" id="clear-events">CLEAR</button>
+      </div>
+      <div class="panel-body" id="event-body">
+        <div class="empty">Waiting for events...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>

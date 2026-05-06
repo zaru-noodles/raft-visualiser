@@ -5,6 +5,7 @@ import (
 	"slices"
 )
 
+// stateFn is a function type that represents the state of a node (follower, candidate, leader)
 type stateFn func() stateFn
 
 type NodeState int

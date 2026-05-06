@@ -130,9 +130,12 @@ func (n *Node) leaderAdvanceCommitIndex() {
                 count++
             }
         }
+
         if count >= 3 {
             n.commitNext()
-			n.pendingCommits[idx] <- true
+			if ch, ok := n.pendingCommits[idx]; ok {
+				ch <- true
+			}
         }
     }
 }

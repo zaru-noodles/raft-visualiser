@@ -130,13 +130,13 @@ func (n *Node) deleteLogEntry(index uint64) {
 
 func (n *Node) appendLogEntry(entry Entry) {
     n.log = append(n.log, entry)
-    log.Print(n.storage.Save())
+    n.storage.Save()
 }
 
 func (n *Node) setTermAndVote(term uint64, votedFor int8) {
     n.currentTerm = term
     n.votedFor = votedFor
-    log.Print(n.storage.Save())
+    n.storage.Save()
 }
 
 func (n *Node) setTermIfGreater(newTerm uint64) {

@@ -10,7 +10,7 @@ func (n *Node) leader() stateFn {
 	n.state = Leader
 	n.initLeaderStates()
 
-	heartbeat := time.NewTicker(50 * time.Millisecond)
+	heartbeat := time.NewTicker(50 * time.Millisecond * time.Duration(n.timeMultiplier))
 	appendReplies := make(chan AppendReplyWrapper, 32)
 	defer heartbeat.Stop()
 
@@ -62,6 +62,8 @@ func (n *Node) leader() stateFn {
 		case req := <- n.clientTransport.Recv():
 			n.handleClientRequest(&req) 
 		}
+
+		n.sleep()
 	}
 }
 

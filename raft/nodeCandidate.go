@@ -1,6 +1,8 @@
 package raft
 
-import "log"
+import (
+	"log"
+)
 
 func (n *Node) candidate() stateFn {
 	log.Printf("Transitioned to CANDIDATE (Term %v)", n.currentTerm + 1)
@@ -26,7 +28,7 @@ func (n *Node) candidate() stateFn {
 	}
 
 	// count votes, if majority reached before timeout, transit to leader, else retry election
-	timeout := randomElectionTimeout()
+	timeout := n.randomElectionTimeout()
 	voteCount := 1
 	n.setVotedFor(int8(n.id))
 	for {
@@ -76,5 +78,7 @@ func (n *Node) candidate() stateFn {
 		case req := <- n.clientTransport.Recv():
 			n.handleClientRequest(&req) 
 		}
+
+		n.sleep()
 	}
 }

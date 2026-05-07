@@ -31,7 +31,7 @@ func (s *HTTPServer) handleWebsocket() func(w http.ResponseWriter, r *http.Reque
 		}
 		defer conn.Close()
 
-		ticker := time.NewTicker(100 * time.Millisecond)
+		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
 
 		// send a summary of the node's attributes every 100ms to the dashboard

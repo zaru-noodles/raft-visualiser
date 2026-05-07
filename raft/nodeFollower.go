@@ -10,7 +10,7 @@ func (n *Node) follower() stateFn {
 	log.Printf("Transitioned to FOLLOWER (Term %v)", n.currentTerm)
 	n.state = Follower
 
-	timeout := randomElectionTimeout()
+	timeout := n.randomElectionTimeout()
 
 	for {
 		select {
@@ -32,7 +32,7 @@ func (n *Node) follower() stateFn {
 				n.setTermIfGreater(payload.Term)
 
 				// reset timeout
-				timeout = randomElectionTimeout()
+				timeout = n.randomElectionTimeout()
 
 				// reply false if log doesnt contain PrevLogIndex at the correct term
 				if payload.PrevLogIndex != 0 && (int(payload.PrevLogIndex) > len(n.log) || n.log[payload.PrevLogIndex - 1].Term != payload.PrevLogTerm) {
@@ -65,7 +65,7 @@ func (n *Node) follower() stateFn {
 				// if vote is granted, reset election timer
 				if reply.Granted {
 					log.Printf("Voted for node %v (Term %v)", payload.CandidateID, n.currentTerm)
-					timeout = randomElectionTimeout()
+					timeout = n.randomElectionTimeout()
 				}
 
 				msg.Reply <- reply
@@ -75,10 +75,12 @@ func (n *Node) follower() stateFn {
 		case req := <- n.clientTransport.Recv():
 			n.handleClientRequest(&req) 
 		}
+
+		n.sleep()
 	}
 }
 
-func randomElectionTimeout() <-chan time.Time {
-	d := time.Duration(250 + rand.IntN(100)) * time.Millisecond
+func (n *Node) randomElectionTimeout() <-chan time.Time {
+	d := time.Duration((250 + rand.IntN(100)) * n.timeMultiplier) * time.Millisecond
 	return time.After(d)
 }

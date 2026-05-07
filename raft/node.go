@@ -3,6 +3,7 @@ package raft
 import (
 	"log"
 	"slices"
+	"time"
 )
 
 // stateFn is a function type that represents the state of a node (follower, candidate, leader)
@@ -35,9 +36,15 @@ type Node struct {
 	matchIndex     [5]uint64
 	pendingCommits map[uint64]chan bool
 
-	transport       Transport       // supports RPC connection between peers
-	clientTransport ClientTransport // supports client requests
-	storage         *PersistentStorage
+	// SUPPORTING STRUCTS
+	transport       Transport           // supports RPC connection between peers
+	clientTransport ClientTransport     // supports client requests
+	storage         *PersistentStorage  // supports storage of persistant states
+
+	// CONFIG
+	timeMultiplier  int
+	loopDelay       int
+	voteDelay       int
 }
 
 func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string) *Node {
@@ -48,6 +55,9 @@ func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string) *Node {
 		leaderID:        -1,
 		fsm:             map[int]string{},
 		clientTransport: ct,
+		timeMultiplier:  20,
+		loopDelay:       25,
+		voteDelay:       10,
 	}
 
 	node.storage = makeStorage(&node, dataDir)
@@ -68,6 +78,8 @@ func (n *Node) Run() {
 }
 
 func (n *Node) handleRequestVote(req RequestVote) RequestVoteReply {
+	time.Sleep(time.Duration(n.voteDelay) * time.Millisecond * time.Duration(n.timeMultiplier))
+
 	rejectReply := RequestVoteReply{Term: n.currentTerm, Granted: false}
 
 	// reject if candidate's term is behind
@@ -109,6 +121,11 @@ func (n *Node) commitNext() {
 	log.Printf("Commited entry: {%v: %v} (Index: %v, Term: %v)", entry.Key, entry.Value, entry.Index, entry.Term)
 	n.fsm[entry.Key] = entry.Value
 	n.commitIndex++
+}
+
+// sleep for cycle delay duration
+func (n *Node) sleep() {
+	time.Sleep(time.Duration(n.loopDelay) * time.Millisecond * time.Duration(n.timeMultiplier))
 }
 
 // SETTERS FOR PERSISTANT STATES

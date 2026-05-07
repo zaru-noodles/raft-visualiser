@@ -8,14 +8,17 @@ import (
 )
 
 type TransportRPC struct {
-	peers map[uint8]*PeerClient
-	inbox chan raft.Message
+	id           uint8
+	peers        map[uint8]*PeerClient
+	inbox        chan raft.Message
+	eventHistory chan map[string]any  // to be used by websockets to send RPC data to dashboard
 }
 
 func MakeTransport(RPCPort string, addrs []string, id uint8) TransportRPC {
 	inbox := make(chan raft.Message, 16)
+	eventHistory := make(chan map[string]any, 16)
 
-	go startServer(inbox, RPCPort)
+	go startServer(inbox, RPCPort, eventHistory, id)
 
 	// store addresses
 	peers := make(map[uint8]*PeerClient)
@@ -29,7 +32,7 @@ func MakeTransport(RPCPort string, addrs []string, id uint8) TransportRPC {
 		}
 	}
 
-	return TransportRPC{ peers: peers, inbox: inbox } 
+	return TransportRPC{ peers: peers, inbox: inbox, id: id, eventHistory: eventHistory} 
 }
 
 func (t TransportRPC) SendRequestVote(peer uint8, req raft.RequestVote) (raft.RequestVoteReply, error) {
@@ -41,6 +44,7 @@ func (t TransportRPC) SendRequestVote(peer uint8, req raft.RequestVote) (raft.Re
 		return reply, fmt.Errorf("no connection to peer %d", peer)
 	}
 
+	t.eventHistory <- map[string]any {"type": "request_vote", "from": t.id, "to": peer}
     err := client.Call("RaftService.RequestVote", req, &reply)
 	if err != nil {
 		log.Printf("Lost connection to node %v", peer)
@@ -59,6 +63,7 @@ func (t TransportRPC) SendAppendEntries(peer uint8, req raft.AppendEntries) (raf
 		return reply, fmt.Errorf("no connection to peer %d", peer)
 	}
 
+	t.eventHistory <- map[string]any {"type": "append_entries", "from": t.id, "to": peer}
     err := client.Call("RaftService.AppendEntries", req, &reply)
 	if err != nil {
 		log.Printf("Lost connection to node %v", peer)
@@ -69,4 +74,8 @@ func (t TransportRPC) SendAppendEntries(peer uint8, req raft.AppendEntries) (raf
 
 func (t TransportRPC) Recv() <-chan raft.Message {
 	return t.inbox
+}
+
+func (t TransportRPC) GetEventHistory() <-chan map[string]any {
+	return t.eventHistory
 }

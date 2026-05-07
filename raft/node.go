@@ -191,3 +191,7 @@ func (n *Node) GetNodeSummary() map[string]any {
 		"leader_id":    n.leaderID,
 	}
 }
+
+func (n *Node) GetEventHistory() <-chan map[string]any {
+	return n.transport.GetEventHistory()
+}

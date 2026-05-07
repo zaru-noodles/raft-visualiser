@@ -8,9 +8,15 @@ import (
 	"github.com/zaru-noodles/raft-visualiser/raft"
 )
 
-// opens port to allow RPC
-func startServer(inbox chan raft.Message, port string) {
-    service := &RaftService{inbox: inbox}
+type RaftService struct {
+	id           uint8
+	inbox        chan raft.Message
+	eventHistory chan map[string]any  // to be used by websockets to send RPC data to dashboard
+}
+
+// opens port to allow RPCs
+func startServer(inbox chan raft.Message, port string, eventHistory chan map[string]any, id uint8) {
+    service := &RaftService{inbox: inbox, eventHistory: eventHistory, id: id}
     rpc.Register(service)
 	
     listener, err := net.Listen("tcp", ":" + port)
@@ -25,4 +31,30 @@ func startServer(inbox chan raft.Message, port string) {
         }
         go rpc.ServeConn(conn)
     }
+}
+
+// adds a RequestVote message to the inbox channel
+func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVoteReply) error {
+    msg := raft.Message{
+        Payload: args,
+        Reply:   make(chan any, 1),
+    }
+
+    s.inbox <- msg
+    *reply = (<- msg.Reply).(raft.RequestVoteReply)
+	s.eventHistory <- map[string]any {"type": "request_vote_reply", "from": s.id, "to": args.CandidateID}
+    return nil
+}
+
+// adds a AppendEntries message to the inbox channel
+func (s *RaftService) AppendEntries(args raft.AppendEntries, reply *raft.AppendEntriesReply) error {
+    msg := raft.Message{
+        Payload: args,
+        Reply:   make(chan any, 1),
+    }
+
+    s.inbox <- msg
+    *reply = (<- msg.Reply).(raft.AppendEntriesReply)
+	s.eventHistory <- map[string]any {"type": "append_entries_reply", "from": s.id, "to": args.LeaderID}
+    return nil
 }

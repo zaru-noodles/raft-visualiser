@@ -31,16 +31,34 @@ func (s *HTTPServer) handleWebsocket() func(w http.ResponseWriter, r *http.Reque
 		}
 		defer conn.Close()
 
-		ticker := time.NewTicker(50 * time.Millisecond)
+        // single writer goroutine
+		writeCh := make(chan []byte, 64)
+        go func() {
+            for msg := range writeCh {
+                if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+                    return
+                }
+            }
+        }()
+
+		// send RPC events to dashboard
+		go func() {
+			for event := range s.Node.GetEventHistory() {
+				event["kind"] = "rpc"
+				data, _ := json.Marshal(event)
+				writeCh <- data
+			}
+		}()
+
+		ticker := time.NewTicker(200 * time.Millisecond)
 		defer ticker.Stop()
 
-		// send a summary of the node's attributes every 100ms to the dashboard
+		// send a summary of the node's attributes to the dashboard
 		for range ticker.C {
 			snapshot := s.Node.GetNodeSummary()
+			snapshot["kind"] = "state"
 			data, _ := json.Marshal(snapshot)
-			if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
-				return
-			}
+			writeCh <- data
 		}
 	}
 }

@@ -7,6 +7,7 @@ type Transport interface {
 	SendRequestVote(peer uint8, req RequestVote) (RequestVoteReply, error)
     SendAppendEntries(peer uint8, req AppendEntries) (AppendEntriesReply, error)
     Recv() <-chan Message
+	GetEventHistory() <-chan map[string]any
 }
 
 type Message struct {

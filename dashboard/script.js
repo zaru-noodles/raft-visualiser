@@ -79,12 +79,44 @@ function updateNodeUI(id) {
   const card = document.getElementById(`node-card-${id}`);
   const stateEl = document.getElementById(`node-state-${id}`);
   const termEl = document.getElementById(`node-term-${id}`);
-  const voteEl = document.getElementById(`node-vote-${id}`);
 
   card.className = `node-card ${node.connected ? node.state : 'disconnected'}`;
   stateEl.className = `node-state ${node.connected ? node.state : 'disconnected'}`;
   stateEl.textContent = node.connected ? node.state : 'Offline';
   termEl.textContent = node.term;
+}
+
+// animate lines travelling between nodes to represent RPCS
+function animateRPC(fromId, toId, type) {
+    const svg = document.getElementById('connections');
+    const from = positions[fromId];
+    const to = positions[toId];
+
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('r', '3');
+    dot.setAttribute('cx', from.x);
+    dot.setAttribute('cy', from.y);
+    dot.setAttribute('fill', type === 'request_vote' ? '#e06040' : '#f0c040');
+    dot.style.filter = `drop-shadow(0 0 4px ${type === 'request_vote' ? '#e06040' : '#f0c040'})`;
+    svg.appendChild(dot);
+
+    const duration = 400;
+    const start = performance.now();
+
+    function step(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = t * (2 - t); // ease out
+        dot.setAttribute('cx', from.x + (to.x - from.x) * ease);
+        dot.setAttribute('cy', from.y + (to.y - from.y) * ease);
+
+        if (t < 1) {
+            requestAnimationFrame(step);
+        } else {
+            dot.remove();
+        }
+    }
+
+    requestAnimationFrame(step);
 }
 
 // Events
@@ -156,21 +188,27 @@ function connectNode(id) {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        const prev = { ...nodes[id] };
 
-        nodes[id].state = data.state || 'follower';
-        nodes[id].term = data.term || 0;
-        nodes[id].votedFor = data.voted_for ?? -1;
-        nodes[id].log = data.log || [];
-        nodes[id].commitIndex = data.commit_index || 0;
-        nodes[id].leaderID = data.leader_id ?? -1;
+        if (data.kind === "state") {
+          const prev = { ...nodes[id] };
+          
+          nodes[id].state = data.state || 'follower';
+          nodes[id].term = data.term || 0;
+          nodes[id].votedFor = data.voted_for ?? -1;
+          nodes[id].log = data.log || [];
+          nodes[id].commitIndex = data.commit_index || 0;
+          nodes[id].leaderID = data.leader_id ?? -1;
 
-        if (prev.state !== nodes[id].state) {
-          addEvent(id, `→ ${nodes[id].state.toUpperCase()} (term ${nodes[id].term})`);
+          if (prev.state !== nodes[id].state) {
+            addEvent(id, `→ ${nodes[id].state.toUpperCase()} (term ${nodes[id].term})`);
+          }
+
+          updateNodeUI(id);
+          updateClusterInfo();
+
+        } else if (data.kind === "rpc") {
+          animateRPC(data.from, data.to, data.type)
         }
-
-        updateNodeUI(id);
-        updateClusterInfo();
       } catch (e) {
         console.error(`Parse error node-${id}:`, e);
       }

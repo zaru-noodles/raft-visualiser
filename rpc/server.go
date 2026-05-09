@@ -42,7 +42,13 @@ func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVote
 
     s.inbox <- msg
     *reply = (<- msg.Reply).(raft.RequestVoteReply)
-	s.eventHistory <- map[string]any {"type": "request_vote_reply", "from": s.id, "to": args.CandidateID}
+
+	if reply.Granted {
+		s.eventHistory <- map[string]any {"type": "reply_success", "from": s.id, "to": args.CandidateID}
+	} else {
+		s.eventHistory <- map[string]any {"type": "reply_fail", "from": s.id, "to": args.CandidateID}
+	}
+
     return nil
 }
 
@@ -55,6 +61,11 @@ func (s *RaftService) AppendEntries(args raft.AppendEntries, reply *raft.AppendE
 
     s.inbox <- msg
     *reply = (<- msg.Reply).(raft.AppendEntriesReply)
-	s.eventHistory <- map[string]any {"type": "append_entries_reply", "from": s.id, "to": args.LeaderID}
+
+	if reply.Success {
+		s.eventHistory <- map[string]any {"type": "reply_success", "from": s.id, "to": args.LeaderID}
+	} else {
+		s.eventHistory <- map[string]any {"type": "reply_success", "from": s.id, "to": args.LeaderID}
+	}
     return nil
 }

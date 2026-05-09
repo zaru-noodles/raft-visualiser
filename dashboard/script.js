@@ -1,6 +1,6 @@
 const NUM_NODES = 5;
 const PORTS = [8080, 8081, 8082, 8083, 8084];
-const NODE_COLORS = ['#e06080', '#60c0e0', '#a0e060', '#c080e0', '#e0a040'];
+const RPC_COLORS = {"append_entries": '#f0c040', "request_vote": '#e6782f', "reply_success": '#40d080', "reply_fail": '#e04060'}
 
 // Node positions in a circle
 const CX = 380, CY = 380, RADIUS = 280;
@@ -96,8 +96,8 @@ function animateRPC(fromId, toId, type) {
     dot.setAttribute('r', '3');
     dot.setAttribute('cx', from.x);
     dot.setAttribute('cy', from.y);
-    dot.setAttribute('fill', type === 'request_vote' ? '#e06040' : '#f0c040');
-    dot.style.filter = `drop-shadow(0 0 4px ${type === 'request_vote' ? '#e06040' : '#f0c040'})`;
+    dot.setAttribute('fill', RPC_COLORS[type]);
+    dot.style.filter = `drop-shadow(0 0 4px ${RPC_COLORS[type]})`;
     svg.appendChild(dot);
 
     const duration = 400;
@@ -191,7 +191,7 @@ function connectNode(id) {
 
         if (data.kind === "state") {
           const prev = { ...nodes[id] };
-          
+
           nodes[id].state = data.state || 'follower';
           nodes[id].term = data.term || 0;
           nodes[id].votedFor = data.voted_for ?? -1;
@@ -207,6 +207,7 @@ function connectNode(id) {
           updateClusterInfo();
 
         } else if (data.kind === "rpc") {
+          console.log(data)
           animateRPC(data.from, data.to, data.type)
         }
       } catch (e) {

@@ -32,7 +32,7 @@ func (s *HTTPServer) handleWebsocket() func(w http.ResponseWriter, r *http.Reque
 		defer conn.Close()
 
         // single writer goroutine
-		writeCh := make(chan []byte, 64)
+		writeCh := make(chan []byte, 128)
         go func() {
             for msg := range writeCh {
                 if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
@@ -50,7 +50,7 @@ func (s *HTTPServer) handleWebsocket() func(w http.ResponseWriter, r *http.Reque
 			}
 		}()
 
-		ticker := time.NewTicker(75 * time.Millisecond)
+		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 
 		// send a summary of the node's attributes to the dashboard

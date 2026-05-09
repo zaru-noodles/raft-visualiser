@@ -21,6 +21,7 @@ func (n *Node) leader() stateFn {
 
 		// handle RPCs
 		case msg := <- n.transport.Recv():
+			n.sleepForReplyDelay()
             switch payload := msg.Payload.(type) {
 			// demote to follower if leader with higher term is found
             case AppendEntries:
@@ -48,10 +49,13 @@ func (n *Node) leader() stateFn {
 				n.setTermIfGreater(r.Reply.Term)
 				return n.follower
 			}
+
 			if r.Reply.Success {
-				n.matchIndex[r.PeerID] = n.nextIndex[r.PeerID] - 1 + r.EntriesCount
-				n.nextIndex[r.PeerID] = n.matchIndex[r.PeerID] + 1
-				n.leaderAdvanceCommitIndex()
+				if r.LastEntryIndex != 0 {
+					n.matchIndex[r.PeerID] = r.LastEntryIndex
+					n.nextIndex[r.PeerID] = n.matchIndex[r.PeerID] + 1
+					n.leaderAdvanceCommitIndex()				
+				}
 
 			// prevent underflow 
 			} else if n.nextIndex[r.PeerID] > 1 {
@@ -63,7 +67,7 @@ func (n *Node) leader() stateFn {
 			n.handleClientRequest(&req) 
 		}
 
-		n.sleep()
+		n.sleepForLoopDelay()
 	}
 }
 
@@ -82,8 +86,10 @@ func (n *Node) sendHeartbeats(appendReplies chan AppendReplyWrapper) {
 			}
 
             var entries []Entry
+			var lastEntryIndex uint64 = 0
             if n.nextIndex[peerID] <= uint64(len(n.log)) {
                 entries = n.log[n.nextIndex[peerID]-1:]
+				lastEntryIndex = entries[len(entries)-1].Index
             }
 
             req := AppendEntries{
@@ -94,9 +100,10 @@ func (n *Node) sendHeartbeats(appendReplies chan AppendReplyWrapper) {
                 Entries:      entries,
                 LeaderCommit: n.commitIndex,
             }
+
             reply, err := n.transport.SendAppendEntries(peerID, req)
             if err == nil {
-                appendReplies <- AppendReplyWrapper{PeerID: peerID, Reply: reply, EntriesCount: uint64(len(entries))}
+                appendReplies <- AppendReplyWrapper{PeerID: peerID, Reply: reply, LastEntryIndex: lastEntryIndex}
             }
         }(i)
 	}

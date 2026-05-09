@@ -53,6 +53,7 @@ func (n *Node) candidate() stateFn {
 
 		// handle any incoming RPCs
 		case msg := <- n.transport.Recv():
+			n.sleepForReplyDelay()
 			switch payload := msg.Payload.(type) {
 			// convert back to follower if received AppendEntries from new leader
 			case AppendEntries:
@@ -79,6 +80,6 @@ func (n *Node) candidate() stateFn {
 			n.handleClientRequest(&req) 
 		}
 
-		n.sleep()
+		n.sleepForLoopDelay()
 	}
 }

@@ -44,7 +44,7 @@ type Node struct {
 	// CONFIG
 	timeMultiplier  int
 	loopDelay       int
-	voteDelay       int
+	replyDelay      int
 }
 
 func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string) *Node {
@@ -55,9 +55,9 @@ func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string) *Node {
 		leaderID:        -1,
 		fsm:             map[int]string{},
 		clientTransport: ct,
-		timeMultiplier:  20,
-		loopDelay:       25,
-		voteDelay:       10,
+		timeMultiplier:  25,
+		loopDelay:       0,
+		replyDelay:      30,
 	}
 
 	node.storage = makeStorage(&node, dataDir)
@@ -78,8 +78,6 @@ func (n *Node) Run() {
 }
 
 func (n *Node) handleRequestVote(req RequestVote) RequestVoteReply {
-	time.Sleep(time.Duration(n.voteDelay) * time.Millisecond * time.Duration(n.timeMultiplier))
-
 	rejectReply := RequestVoteReply{Term: n.currentTerm, Granted: false}
 
 	// reject if candidate's term is behind
@@ -124,8 +122,12 @@ func (n *Node) commitNext() {
 }
 
 // sleep for cycle delay duration
-func (n *Node) sleep() {
+func (n *Node) sleepForLoopDelay() {
 	time.Sleep(time.Duration(n.loopDelay) * time.Millisecond * time.Duration(n.timeMultiplier))
+}
+
+func (n *Node) sleepForReplyDelay() {
+	time.Sleep(time.Duration(n.replyDelay) * time.Millisecond * time.Duration(n.timeMultiplier))
 }
 
 // SETTERS FOR PERSISTANT STATES

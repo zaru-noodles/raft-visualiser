@@ -30,9 +30,9 @@ type AppendEntriesReply struct {
 }
 
 type AppendReplyWrapper struct {
-	PeerID        uint8
-	EntriesCount  uint64
-	Reply         AppendEntriesReply
+	PeerID          uint8
+	LastEntryIndex  uint64
+	Reply           AppendEntriesReply
 }
 
 type RequestVote struct {

@@ -20,6 +20,7 @@ func (n *Node) follower() stateFn {
 
 		// handle any incoming RPCs
 		case msg := <- n.transport.Recv():
+			n.sleepForReplyDelay()
 			switch payload := msg.Payload.(type) {
 			case AppendEntries:
 				// reply false if RPC came from old leader
@@ -42,10 +43,11 @@ func (n *Node) follower() stateFn {
 
 				// append to log if valid
 				for _, e := range payload.Entries {
-					log.Printf("Added {%v: %v} to log (Index: %v, Value: %v)", e.Key, e.Value, e.Index, e.Term)
 					if int(e.Index) > len(n.log) {
+						log.Printf("Added {%v: %v} to log (Index: %v, Term: %v)", e.Key, e.Value, e.Index, e.Term)
 						n.appendLogEntry(e)
 					} else if n.log[e.Index-1].Term != e.Term {
+						log.Printf("Modified and added {%v: %v} log (Index: %v, Term: %v)", e.Key, e.Value, e.Index, e.Term)
 						n.deleteLogEntry(e.Index)
 						n.appendLogEntry(e)
 					} 
@@ -56,7 +58,6 @@ func (n *Node) follower() stateFn {
 					n.commitNext()
 				}
 				msg.Reply <- AppendEntriesReply{Term: n.currentTerm, Success: true}
-
 
 			case RequestVote:
 				n.setTermIfGreater(payload.Term)
@@ -76,7 +77,7 @@ func (n *Node) follower() stateFn {
 			n.handleClientRequest(&req) 
 		}
 
-		n.sleep()
+		n.sleepForLoopDelay()
 	}
 }
 

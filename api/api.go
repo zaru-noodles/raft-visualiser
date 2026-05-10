@@ -19,9 +19,11 @@ func MakeHTTPServer(port string) *HTTPServer {
 }
 
 func (s *HTTPServer) StartServer() {
-	// listen for POST requests on /submit
 	http.HandleFunc("/submit", corsMiddleware(s.handleClientRequest()))
+	http.HandleFunc("/pause", corsMiddleware(s.handlePause()))
+	http.HandleFunc("/resume", corsMiddleware(s.handleResume()))
 	http.HandleFunc("/ws", s.handleWebsocket())
+
     http.ListenAndServe(":" + s.port, nil)
 }
 

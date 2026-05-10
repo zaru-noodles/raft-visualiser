@@ -28,6 +28,7 @@ for (let i = 0; i < NUM_NODES; i++) {
     commitIndex: 0,
     leaderID: -1,
     connected: false,
+    paused: false,
     ws: null
   });
 }
@@ -47,7 +48,6 @@ nodes.forEach((node, i) => {
     <div class="node-id">Node ${i}</div>
     <div class="node-state disconnected" id="node-state-${i}">Offline</div>
     <div class="node-term">term <strong id="node-term-${i}">0</strong></div>
-    <div class="node-vote" id="node-vote-${i}"></div>
   `;
 
   ring.appendChild(card);
@@ -74,16 +74,35 @@ nodes.forEach((node1, i) => {
   });
 });
 
+// render controls
+const grid = document.getElementById('pause-buttons');
+grid.innerHTML = `
+    <div class="controls-label">Pause</div>
+    <div class="controls-buttons">
+        ${nodes.map((node, i) => `
+            <button class="control-node-btn" 
+                    id="node-pause-${i}"
+                    onclick="togglePauseNode(${i})" 
+                    disabled>
+                Node ${i}
+            </button>
+        `).join('')}
+    </div>
+`;
+
 function updateNodeUI(id) {
   const node = nodes[id];
   const card = document.getElementById(`node-card-${id}`);
   const stateEl = document.getElementById(`node-state-${id}`);
   const termEl = document.getElementById(`node-term-${id}`);
+  const pauseButton = document.getElementById(`node-pause-${id}`)
 
-  card.className = `node-card ${node.connected ? node.state : 'disconnected'}`;
+  card.className = `node-card ${node.connected ? node.state : 'disconnected'} ${node.paused ? 'paused' : ''}`;
   stateEl.className = `node-state ${node.connected ? node.state : 'disconnected'}`;
   stateEl.textContent = node.connected ? node.state : 'Offline';
   termEl.textContent = node.term;
+  pauseButton.disabled = !node.connected;
+  pauseButton.className = `control-node-btn ${node.paused ? 'paused' : ''}`
 }
 
 // animate lines travelling between nodes to represent RPCS
@@ -207,7 +226,6 @@ function connectNode(id) {
           updateClusterInfo();
 
         } else if (data.kind === "rpc") {
-          console.log(data)
           animateRPC(data.from, data.to, data.type)
         }
       } catch (e) {
@@ -274,6 +292,20 @@ async function submitCommand() {
   keyInput.focus();
 }
 
+async function togglePauseNode(id) {
+    const node = nodes[id];
+    const port = PORTS[id];
+    const action = node.paused ? 'resume' : 'pause';
+
+    try {
+        await fetch(`http://localhost:${port}/${action}`, { method: 'POST' });
+        node.paused = !node.paused;
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+
 // Init
 for (let i = 0; i < NUM_NODES; i++) {
   updateNodeUI(i);
@@ -281,3 +313,4 @@ for (let i = 0; i < NUM_NODES; i++) {
 }
 updateClusterInfo();
 renderEvents();
+renderControls();

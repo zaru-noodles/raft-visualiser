@@ -14,11 +14,11 @@ type TransportRPC struct {
 	eventHistory chan map[string]any // to be used by websockets to send RPC data to dashboard
 }
 
-func MakeTransport(RPCPort string, addrs []string, id uint8) TransportRPC {
+func MakeTransport(RPCPort string, addrs []string, id uint8, paused *bool) TransportRPC {
 	inbox := make(chan raft.Message, 16)
 	eventHistory := make(chan map[string]any, 256)
 
-	go startServer(inbox, RPCPort, eventHistory, id)
+	go startServer(inbox, RPCPort, eventHistory, id, paused)
 
 	// store addresses
 	peers := make(map[uint8]*PeerClient)

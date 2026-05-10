@@ -45,11 +45,15 @@ type Node struct {
 	timeMultiplier  int
 	loopDelay       int
 	replyDelay      int
+
+	// DASHBOARD CONTROLS
+	Paused  *bool
 }
 
-func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string) *Node {
+func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string, paused *bool) *Node {
 	node := Node{
 		id:              id,
+		Paused:          paused,
 		transport:       t,
 		votedFor:        -1,
 		leaderID:        -1,

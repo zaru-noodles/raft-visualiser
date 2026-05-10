@@ -2,6 +2,7 @@ package raft
 
 import (
 	"log"
+	"time"
 )
 
 func (n *Node) candidate() stateFn {
@@ -32,6 +33,12 @@ func (n *Node) candidate() stateFn {
 	voteCount := 1
 	n.setVotedFor(int8(n.id))
 	for {
+		if *n.Paused {
+            time.Sleep(100 * time.Millisecond)
+			timeout = n.randomElectionTimeout()
+            continue
+        }
+
 		select {
 		case <-timeout:
 			return n.candidate

@@ -15,6 +15,11 @@ func (n *Node) leader() stateFn {
 	defer heartbeat.Stop()
 
 	for {
+		if *n.Paused {
+            time.Sleep(100 * time.Millisecond)
+            continue
+        }
+
 		select {
 		case <- heartbeat.C:
 			n.sendHeartbeats(appendReplies)

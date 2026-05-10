@@ -1,22 +1,24 @@
 package rpc
 
 import (
+	"fmt"
 	"log"
-	"net/rpc"
 	"net"
-	
+	"net/rpc"
+
 	"github.com/zaru-noodles/raft-visualiser/raft"
 )
 
 type RaftService struct {
 	id           uint8
+	paused       *bool
 	inbox        chan raft.Message
 	eventHistory chan map[string]any  // to be used by websockets to send RPC data to dashboard
 }
 
 // opens port to allow RPCs
-func startServer(inbox chan raft.Message, port string, eventHistory chan map[string]any, id uint8) {
-    service := &RaftService{inbox: inbox, eventHistory: eventHistory, id: id}
+func startServer(inbox chan raft.Message, port string, eventHistory chan map[string]any, id uint8, paused *bool) {
+    service := &RaftService{inbox: inbox, eventHistory: eventHistory, id: id, paused: paused}
     rpc.Register(service)
 	
     listener, err := net.Listen("tcp", ":" + port)
@@ -35,6 +37,10 @@ func startServer(inbox chan raft.Message, port string, eventHistory chan map[str
 
 // adds a RequestVote message to the inbox channel
 func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVoteReply) error {
+	if *s.paused {
+		return fmt.Errorf("paused")
+	}
+
     msg := raft.Message{
         Payload: args,
         Reply:   make(chan any, 1),
@@ -54,6 +60,11 @@ func (s *RaftService) RequestVote(args raft.RequestVote, reply *raft.RequestVote
 
 // adds a AppendEntries message to the inbox channel
 func (s *RaftService) AppendEntries(args raft.AppendEntries, reply *raft.AppendEntriesReply) error {
+	if *s.paused {
+		return fmt.Errorf("paused")
+	}
+
+
     msg := raft.Message{
         Payload: args,
         Reply:   make(chan any, 1),

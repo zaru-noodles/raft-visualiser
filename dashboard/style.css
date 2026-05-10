@@ -27,7 +27,7 @@
     overflow-x: hidden;
   }
 
-  /* Subtle grid background */
+  /* Grid background */
   body::before {
     content: '';
     position: fixed;
@@ -127,6 +127,7 @@
     padding: 14px;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: default;
+    overflow: hidden;
   }
 
   .node-card:hover {
@@ -146,6 +147,44 @@
 
   .node-card.follower {
     border-color: rgba(64, 168, 224, 0.25);
+  }
+
+  .node-card.paused {
+    opacity: 80%;
+    border-color: var(--error);
+    position: absolute;
+  }
+
+  .node-card.paused::before,
+  .node-card.paused::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .node-card.paused::before {
+    background: linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      var(--error) calc(50% - 1px),
+      var(--error) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+  }
+
+  .node-card.paused::after {
+    background: linear-gradient(
+      to bottom left,
+      transparent calc(50% - 1px),
+      var(--error) calc(50% - 1px),
+      var(--error) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
   }
 
   .node-card.disconnected {
@@ -226,7 +265,7 @@
   }
 
   .panel-body {
-    padding: 2px 0;
+    padding: 10px 20px;
     max-height: 240px;
     overflow-y: auto;
   }
@@ -366,40 +405,57 @@
     fill: none;
   }
 
-  /* Node controls */
-  .node-controls {
-    display: flex;
-    gap: 4px;
-    margin-top: 8px;
+
+  .controls-grid {
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
   }
 
-  .node-controls button {
-    flex: 1;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 4px;
-    color: var(--text-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
+  .controls-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
   }
 
-  .node-controls button:hover {
-    background: var(--border);
-    color: var(--text);
+  .controls-buttons {
+      display: flex;
+      gap: 6px;
   }
 
-  .node-controls button.stop {
-    border-color: var(--error);
-    color: var(--error);
+  .control-node-btn {
+      flex: 1;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 0;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.15s;
   }
 
-  .node-controls button.stop:hover {
-    background: var(--error);
-    color: var(--bg);
+  .control-node-btn:hover {
+      border-color: var(--error);
+      color: var(--error);
+  }
+
+  .control-node-btn.paused {
+      background: var(--error);
+      border-color: var(--error);
+      color: var(--bg);
+  }
+
+  .control-node-btn.paused:hover {
+      filter: brightness(1.2);
+  }
+
+  .control-node-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
   }

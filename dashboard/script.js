@@ -16,7 +16,6 @@ for (let i = 0; i < NUM_NODES; i++) {
 // State
 const nodes = [];
 const events = [];
-let connections = {};
 
 for (let i = 0; i < NUM_NODES; i++) {
   nodes.push({
@@ -74,21 +73,43 @@ nodes.forEach((node1, i) => {
   });
 });
 
-// render controls
+// render pause controls
 const grid = document.getElementById('pause-buttons');
 grid.innerHTML = `
-    <div class="controls-label">Pause</div>
-    <div class="controls-buttons">
-        ${nodes.map((node, i) => `
-            <button class="control-node-btn" 
-                    id="node-pause-${i}"
-                    onclick="togglePauseNode(${i})" 
-                    disabled>
-                Node ${i}
-            </button>
-        `).join('')}
-    </div>
+  <div class="controls-label">Pause</div>
+  <div class="controls-buttons">
+    ${nodes.map((node, i) => `
+      <button class="control-node-btn" 
+              id="node-pause-${i}"
+              onclick="togglePauseNode(${i})" 
+              disabled>
+        Node ${i}
+      </button>
+    `).join('')}
+  </div>
 `;
+
+// render partition controls
+const partitionGrid = document.getElementById('partition-grid');
+let html = '<div class="controls-label">Cut Connections</div><table class="partition-table"><thead><tr><th></th>';
+for (let j = 1; j < NUM_NODES; j++) {
+  html += `<th class="n${j}">${j}</th>`;
+}
+html += '</tr></thead><tbody>';
+
+for (let i = 0; i < NUM_NODES - 1; i++) {
+  html += `<tr><td class="n${i}">${i}</td>`;
+  for (let j = 1; j < NUM_NODES; j++) {
+    if (j <= i) {
+      html += '<td></td>';
+    } else {
+      html += `<td><button class="partition-btn" id="partition-${i}-${j}" onclick="togglePartition(${i},${j})">·</button></td>`;
+    }
+  }
+  html += '</tr>';
+}
+html += '</tbody></table>';
+partitionGrid.innerHTML = html;
 
 function updateNodeUI(id) {
   const node = nodes[id];
@@ -103,39 +124,50 @@ function updateNodeUI(id) {
   termEl.textContent = node.term;
   pauseButton.disabled = !node.connected;
   pauseButton.className = `control-node-btn ${node.paused ? 'paused' : ''}`
+
+  // update partition buttons involving this node
+  for (let j = 0; j < NUM_NODES; j++) {
+    if (j === id) continue;
+    const a = Math.min(id, j);
+    const b = Math.max(id, j);
+    const btn = document.getElementById(`partition-${a}-${b}`);
+    if (btn) {
+      btn.disabled = !nodes[a].connected || !nodes[b].connected;
+    }
+  }
 }
 
 // animate lines travelling between nodes to represent RPCS
 function animateRPC(fromId, toId, type) {
-    const svg = document.getElementById('connections');
-    const from = positions[fromId];
-    const to = positions[toId];
+  const svg = document.getElementById('connections');
+  const from = positions[fromId];
+  const to = positions[toId];
 
-    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    dot.setAttribute('r', '3');
-    dot.setAttribute('cx', from.x);
-    dot.setAttribute('cy', from.y);
-    dot.setAttribute('fill', RPC_COLORS[type]);
-    dot.style.filter = `drop-shadow(0 0 4px ${RPC_COLORS[type]})`;
-    svg.appendChild(dot);
+  const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  dot.setAttribute('r', '3');
+  dot.setAttribute('cx', from.x);
+  dot.setAttribute('cy', from.y);
+  dot.setAttribute('fill', RPC_COLORS[type]);
+  dot.style.filter = `drop-shadow(0 0 4px ${RPC_COLORS[type]})`;
+  svg.appendChild(dot);
 
-    const duration = 400;
-    const start = performance.now();
+  const duration = 400;
+  const start = performance.now();
 
-    function step(now) {
-        const t = Math.min((now - start) / duration, 1);
-        const ease = t * (2 - t); // ease out
-        dot.setAttribute('cx', from.x + (to.x - from.x) * ease);
-        dot.setAttribute('cy', from.y + (to.y - from.y) * ease);
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = t * (2 - t); // ease out
+    dot.setAttribute('cx', from.x + (to.x - from.x) * ease);
+    dot.setAttribute('cy', from.y + (to.y - from.y) * ease);
 
-        if (t < 1) {
-            requestAnimationFrame(step);
-        } else {
-            dot.remove();
-        }
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      dot.remove();
     }
+  }
 
-    requestAnimationFrame(step);
+  requestAnimationFrame(step);
 }
 
 // Events

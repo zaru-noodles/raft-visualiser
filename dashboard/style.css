@@ -405,57 +405,109 @@
     fill: none;
   }
 
+  .control-block {
+    margin-bottom: 14px;
+  }
 
   .controls-grid {
-      padding: 10px 18px;
-      border-bottom: 1px solid var(--border);
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
   }
 
   .controls-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
   }
 
   .controls-buttons {
-      display: flex;
-      gap: 6px;
+    display: flex;
+    gap: 6px;
   }
 
   .control-node-btn {
-      flex: 1;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 6px 0;
-      color: var(--text-dim);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.15s;
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 0;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
   }
 
   .control-node-btn:hover {
-      border-color: var(--error);
-      color: var(--error);
+    border-color: var(--error);
+    color: var(--error);
   }
 
   .control-node-btn.paused {
-      background: var(--error);
-      border-color: var(--error);
-      color: var(--bg);
+    background: var(--error);
+    border-color: var(--error);
+    color: var(--bg);
   }
 
   .control-node-btn.paused:hover {
-      filter: brightness(1.2);
+    filter: brightness(1.2);
   }
 
   .control-node-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .partition-table {
+    width: auto;
+    border-collapse: collapse;
+  }
+
+  .partition-table th,
+  .partition-table td {
+    width: 28px;
+    height: 22px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+  }
+
+  .partition-btn {
+    width: 26px;
+    height: 26px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .partition-btn:hover {
+    border-color: var(--error);
+    color: var(--error);
+  }
+
+  .partition-btn.cut {
+    background: var(--error);
+    border-color: var(--error);
+    color: var(--bg);
+  }
+
+  .partition-btn.cut:hover {
+    filter: brightness(1.2);
+  }
+  
+  .partition-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
   }

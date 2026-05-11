@@ -12,9 +12,10 @@ type TransportRPC struct {
 	peers        map[uint8]*PeerClient
 	inbox        chan raft.Message
 	eventHistory chan map[string]any // to be used by websockets to send RPC data to dashboard
+	blockedPeers *[]bool
 }
 
-func MakeTransport(RPCPort string, addrs []string, id uint8, paused *bool) TransportRPC {
+func MakeTransport(RPCPort string, addrs []string, id uint8, paused *bool, blockedPeers *[]bool) TransportRPC {
 	inbox := make(chan raft.Message, 16)
 	eventHistory := make(chan map[string]any, 256)
 
@@ -32,11 +33,16 @@ func MakeTransport(RPCPort string, addrs []string, id uint8, paused *bool) Trans
 		}
 	}
 
-	return TransportRPC{peers: peers, inbox: inbox, id: id, eventHistory: eventHistory}
+	return TransportRPC{peers: peers, inbox: inbox, id: id, eventHistory: eventHistory, blockedPeers: blockedPeers}
 }
 
 func (t TransportRPC) SendRequestVote(peer uint8, req raft.RequestVote) (raft.RequestVoteReply, error) {
 	var reply raft.RequestVoteReply
+
+	// check if connection is allowed
+	if (*t.blockedPeers)[peer] {
+		return reply, fmt.Errorf("connection to peer %d blocked by dashboard", peer)
+	}
 
 	// check if client exists
 	client := t.peers[peer].GetClient()
@@ -56,6 +62,11 @@ func (t TransportRPC) SendRequestVote(peer uint8, req raft.RequestVote) (raft.Re
 
 func (t TransportRPC) SendAppendEntries(peer uint8, req raft.AppendEntries) (raft.AppendEntriesReply, error) {
 	var reply raft.AppendEntriesReply
+
+	// check if connection is allowed
+	if (*t.blockedPeers)[peer] {
+		return reply, fmt.Errorf("connection to peer %d blocked by dashboard", peer)
+	}
 
 	// check if client exists
 	client := t.peers[peer].GetClient()

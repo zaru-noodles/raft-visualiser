@@ -22,6 +22,8 @@ func (s *HTTPServer) StartServer() {
 	http.HandleFunc("/submit", corsMiddleware(s.handleClientRequest()))
 	http.HandleFunc("/pause", corsMiddleware(s.handlePause()))
 	http.HandleFunc("/resume", corsMiddleware(s.handleResume()))
+	http.HandleFunc("/block/", corsMiddleware(s.handleBlock()))
+	http.HandleFunc("/unblock/", corsMiddleware(s.handleUnblock()))
 	http.HandleFunc("/ws", s.handleWebsocket())
 
     http.ListenAndServe(":" + s.port, nil)

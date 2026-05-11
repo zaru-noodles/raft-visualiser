@@ -10,9 +10,11 @@ import (
 func main() {
 	cfg := config.Load()
 	paused := false
-	transport := rpc.MakeTransport(cfg.RPCPort, cfg.Peers, cfg.ID, &paused)
+	blockedPeers := make([]bool, 5)
+
+	transport := rpc.MakeTransport(cfg.RPCPort, cfg.Peers, cfg.ID, &paused, &blockedPeers)
 	clientTransport := api.MakeHTTPServer(cfg.WSPort)
-	node := raft.MakeNode(cfg.ID, transport, clientTransport, cfg.DataDir, &paused)
+	node := raft.MakeNode(cfg.ID, transport, clientTransport, cfg.DataDir, &paused, &blockedPeers)
 	clientTransport.Node = node
 	node.Run()
 }

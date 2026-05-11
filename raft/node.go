@@ -37,21 +37,22 @@ type Node struct {
 	pendingCommits map[uint64]chan bool
 
 	// SUPPORTING STRUCTS
-	transport       Transport           // supports RPC connection between peers
-	clientTransport ClientTransport     // supports client requests
-	storage         *PersistentStorage  // supports storage of persistant states
+	transport       Transport          // supports RPC connection between peers
+	clientTransport ClientTransport    // supports client requests
+	storage         *PersistentStorage // supports storage of persistant states
 
 	// CONFIG
-	timeMultiplier  int
-	loopDelay       int
-	replyDelay      int
+	timeMultiplier int
+	loopDelay      int
+	replyDelay     int
 
 	// DASHBOARD CONTROLS
 	Paused       *bool
 	pausedChan   chan any
+	BlockedPeers *[]bool
 }
 
-func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string, paused *bool) *Node {
+func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string, paused *bool, blockedPeers *[]bool) *Node {
 	node := Node{
 		id:              id,
 		transport:       t,
@@ -64,6 +65,7 @@ func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string, paused 
 		replyDelay:      30,
 		Paused:          paused,
 		pausedChan:      make(chan any),
+		BlockedPeers:    blockedPeers,
 	}
 
 	node.storage = makeStorage(&node, dataDir)
@@ -175,12 +177,12 @@ func (n *Node) setTermIfGreater(newTerm uint64) {
 
 // SETTERS FOR CONTROL
 func (n *Node) SetPaused(p bool) {
-    *n.Paused = p
-    if p {
-        close(n.pausedChan) // unblocks the select loop
-    } else {
-        n.pausedChan = make(chan any)
-    }
+	*n.Paused = p
+	if p {
+		close(n.pausedChan) // unblocks the select loop
+	} else {
+		n.pausedChan = make(chan any)
+	}
 }
 
 // GETTERS

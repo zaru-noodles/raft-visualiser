@@ -16,6 +16,7 @@ for (let i = 0; i < NUM_NODES; i++) {
 // State
 const nodes = [];
 const events = [];
+const partitions = {};
 
 for (let i = 0; i < NUM_NODES; i++) {
   nodes.push({
@@ -103,6 +104,7 @@ for (let i = 0; i < NUM_NODES - 1; i++) {
     if (j <= i) {
       html += '<td></td>';
     } else {
+      partitions[`${i}-${j}`] = false
       html += `<td><button class="partition-btn" id="partition-${i}-${j}" onclick="togglePartition(${i},${j})">·</button></td>`;
     }
   }
@@ -325,18 +327,33 @@ async function submitCommand() {
 }
 
 async function togglePauseNode(id) {
-    const node = nodes[id];
-    const port = PORTS[id];
-    const action = node.paused ? 'resume' : 'pause';
+  const node = nodes[id];
+  const port = PORTS[id];
+  const action = node.paused ? 'resume' : 'pause';
 
-    try {
-        await fetch(`http://localhost:${port}/${action}`, { method: 'POST' });
-        node.paused = !node.paused;
-    } catch (e) {
-        console.error(e);
-    }
+  try {
+    await fetch(`http://localhost:${port}/${action}`, { method: 'POST' });
+    node.paused = !node.paused;
+  } catch (e) {
+    console.error(e);
+  }
 }
 
+async function togglePartition(id1, id2) {
+  const key = `${id1}-${id2}`
+  const action = partitions[key] ? 'unblock' : 'block';
+  const btn = document.getElementById(`partition-${id1}-${id2}`)
+
+  try {
+    await fetch(`http://localhost:${PORTS[id1]}/${action}/${id2}`, { method: 'POST' });
+    await fetch(`http://localhost:${PORTS[id2]}/${action}/${id1}`, { method: 'POST' });
+    partitions[key] = !partitions[key]
+    btn.className = `partition-btn ${partitions[key] ? 'cut' : ''}`;
+    btn.textContent = partitions[key] ? '✕' : '·';
+  } catch (e) {
+    console.error(e)
+  }
+}
 
 // Init
 for (let i = 0; i < NUM_NODES; i++) {

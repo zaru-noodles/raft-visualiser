@@ -47,13 +47,13 @@ type Node struct {
 	replyDelay      int
 
 	// DASHBOARD CONTROLS
-	Paused  *bool
+	Paused       *bool
+	pausedChan   chan any
 }
 
 func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string, paused *bool) *Node {
 	node := Node{
 		id:              id,
-		Paused:          paused,
 		transport:       t,
 		votedFor:        -1,
 		leaderID:        -1,
@@ -62,6 +62,8 @@ func MakeNode(id uint8, t Transport, ct ClientTransport, dataDir string, paused 
 		timeMultiplier:  25,
 		loopDelay:       0,
 		replyDelay:      30,
+		Paused:          paused,
+		pausedChan:      make(chan any),
 	}
 
 	node.storage = makeStorage(&node, dataDir)
@@ -169,6 +171,16 @@ func (n *Node) setTermIfGreater(newTerm uint64) {
 
 	n.setTermAndVote(newTerm, -1)
 	n.leaderID = -1
+}
+
+// SETTERS FOR CONTROL
+func (n *Node) SetPaused(p bool) {
+    *n.Paused = p
+    if p {
+        close(n.pausedChan) // unblocks the select loop
+    } else {
+        n.pausedChan = make(chan any)
+    }
 }
 
 // GETTERS

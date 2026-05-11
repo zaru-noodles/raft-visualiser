@@ -15,12 +15,13 @@ func (n *Node) leader() stateFn {
 	defer heartbeat.Stop()
 
 	for {
-		if *n.Paused {
-            time.Sleep(100 * time.Millisecond)
-            continue
-        }
-
 		select {
+		// if paused, stall until unpaused
+		case <-n.pausedChan:
+            for *n.Paused {
+                time.Sleep(100 * time.Millisecond)
+            }
+
 		case <- heartbeat.C:
 			n.sendHeartbeats(appendReplies)
 

@@ -33,13 +33,15 @@ func (n *Node) candidate() stateFn {
 	voteCount := 1
 	n.setVotedFor(int8(n.id))
 	for {
-		if *n.Paused {
-            time.Sleep(100 * time.Millisecond)
-			timeout = n.randomElectionTimeout()
-            continue
-        }
-
 		select {
+		// if paused, stall until unpaused
+		case <-n.pausedChan:
+            for *n.Paused {
+                time.Sleep(100 * time.Millisecond)
+            }
+            timeout = n.randomElectionTimeout()
+
+		// retry election if not enough votes
 		case <-timeout:
 			return n.candidate
 

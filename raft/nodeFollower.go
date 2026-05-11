@@ -13,13 +13,14 @@ func (n *Node) follower() stateFn {
 	timeout := n.randomElectionTimeout()
 
 	for {
-		if *n.Paused {
-            time.Sleep(100 * time.Millisecond)
-			timeout = n.randomElectionTimeout()
-            continue
-        }
-
 		select {
+		// if paused, stall until unpaused
+		case <-n.pausedChan:
+            for *n.Paused {
+                time.Sleep(100 * time.Millisecond)
+            }
+            timeout = n.randomElectionTimeout()
+
 		// transit to candidate if heartbeat is missing 
 		case <- timeout:
 			return n.candidate

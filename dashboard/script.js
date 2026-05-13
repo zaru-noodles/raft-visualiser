@@ -57,10 +57,8 @@ nodes.forEach((node, i) => {
 const svg = document.getElementById('connections');
 svg.innerHTML = '';
 
-nodes.forEach((node1, i) => {
-  nodes.forEach((node2, j) => {
-    if (i <= j) return;
-
+for (let i = 0; i < NUM_NODES - 1; i++) {
+  for (let j = i+1; j < NUM_NODES; j++) {
     const from = positions[i];
     const to = positions[j];
 
@@ -70,9 +68,10 @@ nodes.forEach((node1, i) => {
     line.setAttribute('x2', to.x);
     line.setAttribute('y2', to.y);
     line.setAttribute('class', 'connection-line');
+    line.setAttribute('id', `edge-${i}-${j}`)
     svg.appendChild(line);
-  });
-});
+  }
+}
 
 // render pause controls
 const grid = document.getElementById('pause-buttons');
@@ -343,6 +342,7 @@ async function togglePartition(id1, id2) {
   const key = `${id1}-${id2}`
   const action = partitions[key] ? 'unblock' : 'block';
   const btn = document.getElementById(`partition-${id1}-${id2}`)
+  const edge = document.getElementById(`edge-${id1}-${id2}`)
 
   try {
     await fetch(`http://localhost:${PORTS[id1]}/${action}/${id2}`, { method: 'POST' });
@@ -350,6 +350,7 @@ async function togglePartition(id1, id2) {
     partitions[key] = !partitions[key]
     btn.className = `partition-btn ${partitions[key] ? 'cut' : ''}`;
     btn.textContent = partitions[key] ? '✕' : '·';
+    edge.setAttribute('class', `connection-line ${partitions[key] ? 'disconnected' : ''}`);
   } catch (e) {
     console.error(e)
   }
@@ -362,4 +363,3 @@ for (let i = 0; i < NUM_NODES; i++) {
 }
 updateClusterInfo();
 renderEvents();
-renderControls();

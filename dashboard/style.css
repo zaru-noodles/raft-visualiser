@@ -405,6 +405,12 @@
     fill: none;
   }
 
+  .connection-line.disconnected {
+    stroke: var(--error);
+    opacity: 1;
+    stroke-dasharray: 4 4;
+  }
+
   .control-block {
     margin-bottom: 14px;
   }

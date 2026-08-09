@@ -4,6 +4,10 @@ A Go implementation of a Raft cluster with a browser dashboard for live visualiz
 
 The project runs a multi-node Raft cluster where each node exposes RPC, dashboard control, and WebSocket state streams. The dashboard displays node connectivity, leader election, term changes, RPC traffic, and allows pausing nodes or partitioning links.
 
+<p align="center">
+    <img width="868" height="508" alt="Recording 2026-08-09 200837" src="https://github.com/user-attachments/assets/80240f53-0453-4f2a-b19a-aa1bb6e5bf3e" />
+</p>
+
 ## Features
 
 - 5-node Raft cluster by default
@@ -13,6 +17,11 @@ The project runs a multi-node Raft cluster where each node exposes RPC, dashboar
 - Pause/resume individual nodes
 - Block/unblock peer connections to simulate partitions
 - Persistent node state using container volumes
+
+<p align="center">
+   <img width="868" height="508" alt="Recording 2026-08-09 201423" src="https://github.com/user-attachments/assets/aae7b8ba-3581-4069-b8a7-b3a440ab1c0a" />
+   <p align="center">The classic split-brain scenario</p>
+</p>
 
 ## Repository structure
 
@@ -76,3 +85,4 @@ Each node exposes dashboard control endpoints on its configured `WS_PORT`:
 - The dashboard connects to node WebSocket endpoints on `localhost:8080` through `localhost:8084`.
 - Network partition simulation is handled by per-node block/unblock endpoints.
 - The project is intended for exploration and demonstration of Raft behavior rather than production use.
+- AI was used to design and style the dashboard.
